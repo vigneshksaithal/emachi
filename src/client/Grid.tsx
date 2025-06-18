@@ -48,17 +48,16 @@ export const Grid: React.FC<GridProps> = ({ grid, found, onFound, size }) => {
   };
 
   return (
-    <div className={`contents`}>
+    <>
       {grid.map((square, index) => (
-        <div key={index} className="square">
-          <Square
-            value={square}
-            selected={selectedA === index || selectedB === index}
-            found={found.includes(square)}
-            onClick={() => handleSquareClick(index)}
-          />
-        </div>
+        <Square
+          key={index}
+          value={square}
+          selected={selectedA === index || selectedB === index}
+          found={found.includes(square)}
+          onClick={() => handleSquareClick(index)}
+        />
       ))}
-    </div>
+    </>
   );
 };

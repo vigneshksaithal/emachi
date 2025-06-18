@@ -12,41 +12,63 @@ export const Square: React.FC<SquareProps> = ({ value, selected, found, onClick 
 
   return (
     <div
-      className={`
-        relative w-full h-full flex items-center justify-center
-        transition-all duration-400 cursor-pointer select-none
-        ${isFlipped ? '[transform:rotateY(0deg)]' : '[transform:rotateY(180deg)]'}
-        [transform-style:preserve-3d]
-      `}
+      className={`square ${isFlipped ? 'flipped' : ''}`}
+      style={{
+        display: 'flex',
+        width: '100%',
+        height: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'filter 0.2s',
+        userSelect: 'none'
+      }}
       onClick={!selected && !found ? onClick : undefined}
     >
-      {/* Card Back - visible when not flipped */}
+      {/* Card Back (hidden when flipped) */}
       <button
-        className={`
-          absolute inset-0 w-full h-full border-none flex justify-center items-center
-          bg-gray-200 dark:bg-gray-600 rounded-2xl
-          [transform:rotateY(180deg)] [backface-visibility:hidden]
-          ${selected || found ? 'cursor-default' : 'cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500'}
-          transition-colors duration-200
-        `}
+        style={{
+          position: 'absolute',
+          width: '100%',
+          height: '100%',
+          border: 'none',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          background: 'var(--bg-2)',
+          borderRadius: '1em',
+          transform: 'rotateY(180deg)',
+          cursor: selected || found ? 'default' : 'pointer',
+          WebkitTapHighlightColor: 'transparent'
+        }}
         disabled={selected || found}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
       />
 
-      {/* Card Front - visible when flipped */}
+      {/* Card Front (visible when flipped) */}
       <div
-        className={`
-          absolute inset-0 w-full h-full flex items-center justify-center
-          bg-white dark:bg-gray-800 rounded-2xl transition-all duration-200
-          [backface-visibility:hidden] pointer-events-none
-          ${found 
-            ? 'border-2 border-gray-300 dark:border-gray-600' 
-            : 'border-2 border-purple-600 dark:border-purple-400'
-          }
-        `}
+        style={{
+          position: 'absolute',
+          width: '100%',
+          height: '100%',
+          background: 'var(--bg-1)',
+          border: found ? '2px solid var(--bg-2)' : '2px solid var(--accent)',
+          borderRadius: '1em',
+          transition: 'border 0.2s',
+          pointerEvents: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
       >
         {!found && (
-          <span className="block text-6xl w-4 h-4 leading-none z-10 pointer-events-none">
+          <span style={{
+            display: 'block',
+            fontSize: '6em',
+            width: '1em',
+            height: '1em',
+            lineHeight: '1',
+            zIndex: 2,
+            pointerEvents: 'none'
+          }}>
             {value}
           </span>
         )}

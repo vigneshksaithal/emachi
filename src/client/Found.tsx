@@ -7,23 +7,46 @@ interface FoundProps {
 
 export const Found: React.FC<FoundProps> = ({ found, size }) => {
   return (
-    <div className="flex flex-wrap justify-center items-center gap-2 z-30 drop-shadow-lg">
+    <div style={{
+      display: 'flex',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: '0.5em',
+      zIndex: 3,
+      filter: 'drop-shadow(0.2em 0.4em 0.6em rgba(0, 0, 0, 0.1))'
+    }}>
       {found.map((emoji, index) => (
         <div
           key={index}
-          className="
-            flex items-center justify-center relative
-            w-6 aspect-square bg-white dark:bg-gray-800 rounded-full
-            animate-pulse
-          "
           style={{
-            fontSize: `max(2.5em, calc(80em / (${size} * ${size})))`
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: `max(2.5em, calc(80em / (${size} * ${size})))`,
+            width: '1.5em',
+            aspectRatio: '1',
+            background: 'var(--bg-1)',
+            borderRadius: '50%',
+            position: 'relative'
           }}
         >
-          <span className="absolute block w-4 h-4 leading-none">
+          <span style={{
+            display: 'block',
+            position: 'absolute',
+            width: '1em',
+            height: '1em',
+            lineHeight: '1'
+          }}>
             {emoji}
           </span>
-          <span className="absolute block w-4 h-4 leading-none">
+          <span style={{
+            display: 'block',
+            position: 'absolute',
+            width: '1em',
+            height: '1em',
+            lineHeight: '1'
+          }}>
             {emoji}
           </span>
         </div>
