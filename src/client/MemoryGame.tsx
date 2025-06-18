@@ -27,6 +27,19 @@ export const MemoryGame = forwardRef<any, MemoryGameProps>(({
   const [remaining, setRemaining] = useState(60000);
   const [playing, setPlaying] = useState(false);
   const animationFrameRef = useRef<number>();
+  
+  // Refs to track current state values in animation loop
+  const playingRef = useRef(playing);
+  const remainingRef = useRef(remaining);
+
+  // Update refs when state changes
+  useEffect(() => {
+    playingRef.current = playing;
+  }, [playing]);
+
+  useEffect(() => {
+    remainingRef.current = remaining;
+  }, [remaining]);
 
   const start = (gameLevel: Level) => {
     setSize(gameLevel.size);
@@ -53,22 +66,25 @@ export const MemoryGame = forwardRef<any, MemoryGameProps>(({
 
   const resume = () => {
     setPlaying(true);
+    playingRef.current = true;
     countdown();
     onPlay();
   };
 
   const countdown = () => {
     const startTime = Date.now();
-    const remainingAtStart = remaining;
+    const initialRemainingForThisLoop = remainingRef.current;
 
     const loop = () => {
-      if (!playing) return;
+      if (!playingRef.current) return;
 
-      const newRemaining = remainingAtStart - (Date.now() - startTime);
+      const newRemaining = initialRemainingForThisLoop - (Date.now() - startTime);
       setRemaining(newRemaining);
+      remainingRef.current = newRemaining;
 
       if (newRemaining <= 0) {
         setPlaying(false);
+        playingRef.current = false;
         onLose();
         return;
       }
@@ -81,6 +97,7 @@ export const MemoryGame = forwardRef<any, MemoryGameProps>(({
 
   const handlePauseClick = () => {
     setPlaying(false);
+    playingRef.current = false;
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
     }
@@ -93,6 +110,7 @@ export const MemoryGame = forwardRef<any, MemoryGameProps>(({
 
     if (newFound.length === (size * size) / 2) {
       setPlaying(false);
+      playingRef.current = false;
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
