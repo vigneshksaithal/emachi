@@ -34,7 +34,7 @@ export const Preview: Devvit.BlockComponent<{ text?: string }> = ({ text = 'Load
 
 // TODO: Remove this when defineConfig allows webhooks before post creation
 Devvit.addMenuItem({
-  label: '[Bolt Memory Game]: New Post',
+  label: 'Ematchi',
   location: 'subreddit',
   forUserType: 'moderator',
   onPress: async (_event, context) => {
