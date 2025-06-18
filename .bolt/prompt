@@ -1,0 +1,598 @@
+##############################
+General Rules
+##############################
+
+I WANT ACTUAL CODE OR EXPLANATION! I
+DON'T WANT "Here's how you can blablabla"
+
+- Be casual unless otherwise specified
+- Be terse and concise
+- Suggest solutions that I didn't think about—anticipate my needs
+- Treat me as an expert
+- Be accurate and thorough
+- Give the answer immediately. Provide detailed explanations and restate my query in your own words if necessary after giving the answer
+- Make your responses actionable
+- Consider new technologies and contrarian ideas, not just the conventional wisdom
+- You may use high levels of speculation or prediction, just flag it for me
+- No moral lectures
+- Discuss safety only when it's crucial and non-obvious
+- If your content policy is an issue, provide the closest acceptable response and explain the content policy issue afterward
+- Cite sources whenever possible at the end, not inline
+- No need to mention your knowledge cutoff!
+- No need to disclose you're an AI
+- Please respect my BiomeJS preferences when you provide code.
+- Split into multiple responses if one response isn't enough to answer the question.
+- Focus on readability over being performant.
+- Fully implement all requested functionality.
+- Leave NO todos, placeholders or missing pieces.
+
+###################################
+Devvit Rules
+###################################
+
+# Project structure
+
+There are four folders to code in:
+
+- /src/devvit This is a Devvit app. NEVER write React code in here. Use `devvit_search` to understand how Devvit works. Never use web apis in here. This is a sandboxed environment. Import Devvit hooks from public-api like this: `import { Devvit, useWebView } from '@devvit/public-api';`. Devvit apps are shown to the user in the Reddit feed. Devvit apps rely on context to pass down helpful apis including (redis, reddit, media, and more).
+- /src/client This is the full screen, client side webview. To persist data and access the server, call `fetch(/my/api/endpoint)`. This is how you get access to the APIs you write in src/server.
+- src/server: This is a serverless backend written in Node. This is where you can access redis and save data.
+- src/shared: This is where you can place code that is to be shared between the devvit app, client, and server and the webview. It's a great place for shared types.
+
+## Guidelines for src/client/\*_/_:
+
+- Use NPM dependencies if needed, ensure they are web compatible
+- You cannot use websockets.
+- Obey the rules of hooks and only write valid React code
+
+## Guidelines for src/devvit/\*_/_:
+
+- Never write React or reference react, only write valid Devvit
+- Never use web or node APIs. This app is ran in a controlled worker environment.
+- Never suggest using dependencies from NPM since they will likely not work
+
+## Guidelines for src/server/\*_/_:
+
+- This is a serverless node.js environment, you have all node globals (using node: prefix) at your disposal except: fs, http, https, and net.
+
+- Instead of http or https, prefer fetch
+- You cannot write files as you are running on a read only file system
+- Do not install any libraries that rely on these to function
+- Websockets are not supported
+- HTTP streaming is not supported
+- Redis is accessible by importing `@devvit/redis`
+- Reddit-specific functionality such as creating posts and comments is accessible by importing `@devvit/reddit`
+
+## General guidelines
+
+- If the user requires real-time application logic, never suggest Websockets. Instead, import scheduler from the `src/devvit/main.tsx`. Below is an example of using Devvit scheduler:
+
+```
+// Create a job
+Devvit.addSchedulerJob({
+  name: 'thing-todo', // you can use an arbitrary name here
+  onRun: async (event, context) => {
+    // do stuff when the job is executed
+  },
+});
+
+// Run the job:
+const jobId = await context.scheduler.runJob({
+    name: 'thing-todo', // the name of the job that we specified in addSchedulerJob() above
+    runAt: new Date('2099-01-01'),
+});
+```
+
+- If the user requires storage, never suggest external services like Supabase. Instead use Devvit's Redis. Below is an example of using Redis:
+
+```
+import {redis} from '@devvit/redis';
+redis.set('key', 'value');
+redis.get('key');
+```
+
+As this is a serverless runtime (akin to AWS Lambda), do not try to run SQLite or stateful in memory processes.
+
+## Guidelines for webroot
+
+NEVER TOUCH ANYTHING IN THIS FOLDER. DO NOT CONTINUE!
+
+# Dev environment setup
+
+At first run, `npm run dev` will return errors. This is expected. Reassure the user that this is expected behavior.
+Below are the aditional steps to get the app set up and get rid of these errors:
+
+1. Ask the user to run `npm run login` and follow instructions in the terminal
+2. Ask the user to run `npm run devvit:init` and follow instructions in the terminal
+3. Ask the user to update the dev:devvit command in package.json to replace YOUR_SUBREDDIT_NAME. Do not proceed until this is changed.
+
+After that, the user is set up to run the app for the first time
+
+## Error handling
+
+`npm run dev` usually throws errors if the user account is not configured yet.
+Instruct the user to see the output of `npm run dev` and follow the instructions in the terminal in order to configure their app fully.
+
+If the user is confused about seeing a "Upgrade Required" message, reassure the user that this is normal. Here are the resolution steps:
+1- Change the port in Bolt's preview window to see the correct output. The "Upgrade Required" message comes from another webpage being served via Devvit's scripts, and Bolt will sometimes default to that page instead of the page that allows the user to see the output of their client code
+2- Remind the user that the app is **not supposed** to be tested in Bolt's preview window. Instead, the user needs to go to their test subreddit, create a new post via the menu actions in the top right, and test their application from there.
+
+#####
+##### DOCS     DOCS    DOCS
+#####
+
+Here is a concise and comprehensive guide to building applications on Reddit's Developer Platform, based on the provided documentation.
+
+### **1. Introduction to Devvit**
+
+Devvit is the development platform for building apps that integrate directly with Reddit communities.
+
+#### **How Apps Work**
+
+*   **App Accounts:** When an app is uploaded, a separate user account is created for it. When the app performs an action (like posting or commenting), it does so through this account, which will appear in the subreddit's moderator list upon installation.
+*   **Permissions:** Apps require permissions to function, which are displayed to users upon installation. These fall into three categories:
+    *   **UI:** For UI elements like menu actions or custom posts.
+    *   **User data handling:** Access to features like Redis, HTTP fetch, scheduler, and triggers.
+    *   **Moderator permissions:** Required for all apps to create a mod account with full permissions on the installing subreddit.
+*   **App Versions:** When you update an app, subreddit moderators must **manually update** the app to the new version in their community settings.
+*   **Development Stages:**
+    1.  **Private:** The app is visible only to you and can be installed in subreddits with < 200 subscribers.
+    2.  **Unlisted:** After publishing, the app is visible to you in the Apps directory and can be installed on larger subreddits.
+    3.  **Public:** After review and approval, the app is visible to all users in the Apps directory.
+
+#### **Client-Side Execution**
+
+Devvit apps are primarily client-side, meaning the app's source code is downloaded and run on the user's device. This improves speed and responsiveness.
+
+*   **What is available to the client:**
+    *   App source code.
+    *   Anything stored in `useState`.
+*   **What is NOT available to the client (Server-Side only):**
+    *   Server-side plugins and data (Redis, secrets, settings).
+    *   HTTP fetch calls made from within the app.
+    *   `onPress` handlers for menu actions and scheduled actions.
+
+Devvit automatically switches execution to the server when it encounters server-side API requests.
+
+### **2. Getting Started: Building Your First App**
+
+This guide covers the standard Devvit app creation process. For building with standard web stacks like React, see the **Devvit Web** section.
+
+#### **Step 1: Environment Setup**
+
+*   **Node.js:** v22.2.0 or higher
+*   **Git:** v2.28.0 or higher
+*   **Code Editor:** VS Code is recommended.
+
+#### **Step 2: Install Devvit CLI**
+
+Install the Command Line Interface (CLI) globally. This tool is used to create, manage, and deploy your apps.
+
+```bash
+npm install -g devvit
+```
+
+#### **Step 3: Log In**
+
+Log in to Devvit using your allowlisted Reddit account.
+
+```bash
+devvit login
+```
+You will be prompted to authorize the CLI in your browser.
+
+#### **Step 4: Create a New Project**
+
+Create a new project directory. The name must be lowercase, kebab-case, 6+ characters, and start with a letter.
+
+```bash
+devvit new my-project-name
+```
+
+#### **Step 5: Choose a Template**
+
+You'll be prompted to select a starting template. The `blocks-post` template is a great starting point for an interactive post. This creates a project directory with the main app code in `src/main.tsx`.
+
+#### **Step 6: Upload Your App**
+
+Navigate into your project directory (`cd my-project-name`) and upload a private version of your app. App names must be unique.
+
+```bash
+devvit upload
+```
+
+#### **Step 7: Playtest Your App**
+
+Playtesting installs your app on a small subreddit you moderate (< 200 subscribers) and automatically hot-reloads any changes you save to your code, allowing for real-time development.
+
+```bash
+devvit playtest <your-test-subreddit-name>
+```
+Go to your subreddit, find your app's menu action (e.g., under the "Mod Tools" three-dot menu), and create a post to see it live. Press `Ctrl + C` in the terminal to end the playtest session.
+
+#### **Step 8: Publish**
+
+Once you are ready, you can submit your app for review to be made public.
+
+---
+
+### **3. Core Concepts: Rendering and State**
+
+#### **Rendering**
+
+*   **Initial Render:** The first time an app is rendered for a user, the code executes on the **server**. The calculated UI is sent to the client.
+*   **Re-rendering:** After the initial load, the app's code is downloaded to the client, and subsequent re-renders happen on the **client-side** for better performance. A re-render is triggered by updating a state variable.
+
+#### **State Management with Hooks**
+
+*   **`useState`**: A hook for preserving information and triggering UI updates. It is the primary way to manage an app's short-term, client-side memory for a single user session. State is lost when the user navigates away.
+    ```javascript
+    // Syntax:
+    const [clickCount, setClickCount] = useState(0);
+
+    // Initializer can be an async function, but it BLOCKS rendering.
+    const [data, setData] = useState(async () => await context.redis.get('my-key'));
+    ```
+*   **`useAsync` (Experimental)**: A hook for performing server-side calls (like fetching data) **without blocking** the render process. This is the preferred method for fetching data to keep the UI snappy.
+    ```javascript
+    // Syntax:
+    const { data, loading, error } = useAsync(async () => await redis.get('welcomeMessage'));
+
+    // Example with loading/error states
+    if (loading) return <text>Loading...</text>;
+    if (error) return <text>Error fetching message</text>;
+    return <text>{data}</text>;
+    ```
+*   **`useInterval` (Experimental)**: A hook to re-render your app at a specified interval (minimum 1000ms). Use it for timers, scoreboards, or clocks. Only one `useInterval` can be active per app.
+    ```javascript
+    const [counter, setCounter] = useState(10);
+
+    // Set up the interval
+    const updateInterval = useInterval(() => {
+      setCounter((current) => current - 1);
+    }, 1000);
+
+    // Start the interval
+    updateInterval.start();
+    ```
+
+*   **Redis vs. `useState`**:
+    *   `useState`: Short-term, client-side memory for a single user session. Fast and responsive for UI changes.
+    *   `context.redis`: Long-term, server-side storage. Use it for data that needs to persist across sessions and users.
+
+### **4. Building Your App: UI and Features**
+
+#### **Interactive Posts**
+
+*   **Post Size:** You can set the height of a custom post to `regular` or `tall`. You can also define the `height` and `width` of elements within the post in pixels or percentages.
+    ```javascript
+    Devvit.addCustomPostType({
+      name: 'TallPost',
+      height: 'tall', // 'regular' is the default
+      render: (_context) => {
+        return <hstack width="100px" maxHeight="100px"></hstack>;
+      },
+    });
+    ```
+*   **Custom Post Preview:** Use `setCustomPostPreview` to update the loading screen of your post with dynamic content.
+    ```javascript
+    const post = await reddit.getPostById(postId);
+    const newPreview = <text>The event starts in 2 days!</text>;
+    await post.setCustomPostPreview(() => newPreview);
+    ```
+*   **Text Fallback:** Provide a fallback for platforms that don't render interactive posts (like old.reddit) using `textFallback`.
+    ```javascript
+    await reddit.submitPost({
+      title: 'My Interactive Post',
+      subredditName: 'devvit',
+      textFallback: { text: 'This is a fallback for old.reddit. [Check out the docs](...)' },
+      preview: <text>Loading interactive content...</text>,
+    });
+    ```
+
+#### **Devvit Web (Experimental)**
+
+Devvit Web allows you to build apps using a standard web stack (React, Three.js, etc.) instead of Devvit's built-in Blocks UI.
+
+*   **How it Works:**
+    *   **File Structure:** Projects are split into `client/` (front-end web code), `server/` (Node.js endpoints), and a `devvit.json` config file.
+    *   **Communication:** The client `fetch`es data from `/api/` endpoints you define in the server.
+*   **Getting Started with Devvit Web:**
+    1.  Create a project from an experimental template, like the [React starter](https://github.com/reddit/devvit-react-starter-experimental).
+    2.  Clone the repo and run `npm install`.
+    3.  Update `package.json` with your test subreddit name.
+    4.  Run `npm run login`, `npm run deploy`, and finally `npm run dev` to playtest.
+*   **Limitations:** Serverless endpoints (short-lived), no `fs` or native packages, and no external requests from the client.
+
+#### **Building Community Games**
+
+*   **Core Principles:**
+    1.  **Bite-sized:** Quick gameplay loops. Fun within seconds.
+    2.  **Design for the feed:** Eye-catching first screen with a clear call to action.
+    3.  **Build content flywheels:** Use scheduled content (daily puzzles) or player-generated content to keep the game fresh.
+    4.  **Embrace asynchronous play:** Allows players to participate anytime.
+    5.  **Scale from one to many:** Fun for a single player but better with a crowd.
+
+### **5. Capabilities (Core Features)**
+
+#### **App Configurations & Secrets**
+
+Define settings that subreddit moderators can configure or that you, the developer, can manage securely.
+
+*   **Installation Settings:** Configurable per subreddit by mods.
+*   **App Settings (Secrets):** Global settings for your app, ideal for API keys. They are managed via the CLI and are not visible to mods.
+
+**1. Define Settings in `main.ts`:**
+```javascript
+import { Devvit, SettingScope } from '@devvit/public-api';
+
+Devvit.addSettings([
+  // Installation-level setting for mods
+  {
+    type: 'string',
+    name: 'welcome-message',
+    label: 'Welcome message for new users',
+  },
+  // App-level secret for developers
+  {
+    type: 'string',
+    name: 'api-key',
+    label: 'My Service API Key',
+    isSecret: true,
+    scope: SettingScope.App, // or 'app'
+  },
+]);
+```
+
+**2. Set Secrets via CLI:**
+```bash
+# List available settings
+devvit settings list
+
+# Set a value for a secret
+devvit settings set api-key
+```
+
+**3. Retrieve Settings in Your App:**
+```javascript
+const welcomeMessage = await context.settings.get('welcome-message');
+const apiKey = await context.settings.get('api-key');
+```
+
+#### **Forms**
+
+Request user input via a dialog.
+
+*   **Usage:**
+    *   **Interactive Posts:** `const myForm = useForm(...)`
+    *   **Menu Actions:** `const myForm = Devvit.createForm(...)`
+*   **Example (Menu Action):**
+    ```javascript
+    const myForm = Devvit.createForm(
+      {
+        title: 'User Report',
+        fields: [
+          { name: 'reason', label: 'Reason for report', type: 'paragraph' },
+          { name: 'isUrgent', label: 'Is this urgent?', type: 'boolean' },
+        ],
+      },
+      (event, context) => {
+        console.log(event.values); // { reason: '...', isUrgent: true }
+        context.ui.showToast('Report submitted!');
+      }
+    );
+
+    Devvit.addMenuItem({
+      label: 'Report User',
+      location: 'post',
+      onPress: async (_event, context) => {
+        context.ui.showForm(myForm);
+      },
+    });
+    ```
+*   **Supported Fields:** `string`, `select`, `paragraph`, `number`, `boolean`, `image`, and `group`.
+
+#### **Triggers**
+
+Execute code automatically in response to Reddit events.
+
+*   **Supported Events:** `PostSubmit`, `CommentCreate`, `PostReport`, `AppInstall`, `ModMail`, `AutomoderatorFilterPost`, and more.
+*   **Usage:**
+    ```javascript
+    Devvit.addTrigger({
+      event: 'PostSubmit',
+      onEvent: async (event, context) => {
+        // 'event' contains post data
+        const post = await context.reddit.getPostById(event.post.id);
+        if (post.title.toLowerCase().includes('help')) {
+          await post.addComment({ text: 'It looks like you need help! Check out our FAQ.' });
+        }
+      },
+    });
+    ```
+
+#### **Scheduler**
+
+Run jobs at a future time or on a recurring basis.
+
+*   **Usage:**
+    1.  **Define the job:**
+        ```javascript
+        Devvit.addSchedulerJob({
+          name: 'daily-post-job',
+          onRun: async (_, context) => {
+            await context.reddit.submitPost({
+              subredditName: await context.reddit.getCurrentSubredditName(),
+              title: 'Daily Discussion Thread',
+              text: 'Talk about anything!',
+            });
+          },
+        });
+        ```
+    2.  **Schedule the job (e.g., on app install):**
+        ```javascript
+        Devvit.addTrigger({
+          event: 'AppInstall',
+          onEvent: async (_, context) => {
+            // Schedule to run every day at noon UTC
+            await context.scheduler.runJob({
+              name: 'daily-post-job',
+              cron: '0 12 * * *',
+            });
+          },
+        });
+        ```
+
+#### **Redis**
+
+A key-value database for persistent, server-side data storage, namespaced per app installation. Ideal for leaderboards, user data, and game state.
+
+*   **Enable in `devvit.yaml`**: `redis: true`
+*   **Usage:**
+    ```javascript
+    // Set a value
+    await context.redis.set('user:123:score', '100');
+
+    // Get a value
+    const score = await context.redis.get('user:123:score');
+
+    // Increment a number
+    await context.redis.incrBy('total_clicks', 1);
+
+    // Use sorted sets for leaderboards
+    await context.redis.zAdd('leaderboard', { score: 150, member: 'user_a' });
+    ```
+*   **Limits:** 1000 commands/sec, 500 MB storage per installation.
+
+#### **Realtime**
+
+Build live, event-driven interactive posts where users see changes in real time. Great for collaborative apps or live-updating games.
+
+*   **Enable in `devvit.yaml`**: `realtime: true`
+*   **Usage:**
+    1.  **Subscribe to a channel in your post's render function:**
+        ```javascript
+        const channel = useChannel({
+          name: 'pixel-updates',
+          onMessage: (data) => {
+            // Update local state when a message is received
+            setPixel(data.x, data.y, data.color);
+          },
+        });
+        channel.subscribe();
+        ```
+    2.  **Send messages to the channel:**
+        ```javascript
+        // From a client (e.g., on button press)
+        await channel.send({ x: 10, y: 20, color: '#FF0000' });
+
+        // From the server (e.g., in a trigger or scheduler job)
+        await context.realtime.send('pixel-updates', { ... });
+        ```
+
+#### **HTTP Fetch**
+
+Make network requests to external domains.
+
+*   **Enable in `main.ts`**: `Devvit.configure({ http: true });`
+*   **Requesting Domains:** You must declare domains in your configuration. They are submitted for review upon upload.
+    ```javascript
+    Devvit.configure({
+      http: {
+        domains: ['my-api.com', 'example.org'],
+      },
+    });
+    ```
+*   A list of [globally allowed domains](https://developers.reddit.com/docs/capabilities/http-fetch-allowlist) (like `api.openai.com`, `discord.com`) exists, but you must still declare them.
+*   **Usage:**
+    ```javascript
+    const response = await fetch('https://my-api.com/data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: 'value' }),
+    });
+    const data = await response.json();
+    ```
+
+#### **Other Capabilities**
+
+*   **Image Uploads:** Upload images from a URL to use in comments or posts. `await context.media.upload({ url: '...', type: 'gif' })`.
+*   **Menu Actions:** Add custom actions to the `...` menu on posts, comments, or subreddits.
+*   **User Actions:** Create posts or comments on behalf of a user, with their explicit permission. Requires `userActions: true` and `runAs: 'USER'` in the API call.
+*   **Cache Helper:** A simple, short-term cache (`context.cache`) to reduce redundant server calls for non-personalized data.
+
+### **6. Developer Tools**
+
+#### **Devvit CLI**
+
+The primary tool for managing your app lifecycle. Key commands:
+
+| Command | Description |
+| :--- | :--- |
+| `devvit new [name]` | Create a new Devvit app project. |
+| `devvit login` / `logout` | Authenticate with your Reddit account. |
+| `devvit upload` | Upload a new private version of your app. |
+| `devvit install <subreddit>` | Install the latest version of your app to a subreddit. |
+| `devvit playtest <subreddit>` | Start a live development and testing session. |
+| `devvit logs <subreddit>` | Stream logs from an installed app. |
+| `devvit settings list/set` | Manage app-level secrets. |
+| `devvit update app` | Update project dependencies to match the CLI version. |
+
+#### **Logging**
+
+Use `console.log()` in your server-side code (triggers, schedulers, menu action handlers) to output logs. View them with:
+
+```bash
+# Stream live logs
+devvit logs <your-subreddit>
+
+# View historical logs from the last 2 hours
+devvit logs <your-subreddit> --since=2h
+```
+
+#### **@devvit/kit**
+
+A helper library with pre-built UI components and patterns.
+
+*   **Installation:** `npm install @devvit/kit`
+*   **Available Helpers:**
+    *   **Columns:** A simple column layout component.
+    *   **Items Pagination:** A component to paginate data with navigation UI.
+    *   **Dev Toolbar:** A toolbar of actions visible only to developers during testing.
+
+### **7. API Reference (Abridged)**
+
+#### **`Devvit` Class**
+
+The main entry point for defining your app's components.
+
+*   `Devvit.addCustomPostType(options)`: Defines an interactive post.
+*   `Devvit.addMenuItem(options)`: Adds an action to a context menu.
+*   `Devvit.addTrigger(options)`: Registers a handler for an event.
+*   `Devvit.addSchedulerJob(options)`: Defines a background job.
+*   `Devvit.addSettings(fields)`: Defines configuration and secret fields.
+*   `Devvit.configure(options)`: Enables capabilities like `http`, `redis`, etc.
+*   `Devvit.createForm(options)`: Creates a reusable form definition.
+
+#### **Key Reddit API Models**
+
+Accessed via `context.reddit`.
+
+*   **`Post`**
+    *   **Properties:** `id`, `title`, `authorName`, `body`, `score`, `url`, `permalink`, `nsfw`, `removed`.
+    *   **Methods:** `approve()`, `remove()`, `delete()`, `addComment()`, `distinguish()`, `lock()`, `setCustomPostPreview()`.
+*   **`Comment`**
+    *   **Properties:** `id`, `authorName`, `body`, `score`, `permalink`, `removed`, `isStickied`.
+    *   **Methods:** `approve()`, `remove()`, `delete()`, `reply()`, `distinguish()`, `lock()`.
+*   **`Subreddit`**
+    *   **Properties:** `id`, `name`, `title`, `description`, `numberOfSubscribers`.
+    *   **Methods:** `getPosts()`, `getComments()`, `getModerators()`, `getModQueue()`, `banUser()`, `submitPost()`.
+*   **`User`**
+    *   **Properties:** `id`, `username`, `commentKarma`, `linkKarma`, `createdAt`.
+    *   **Methods:** `getPosts()`, `getComments()`, `getUserFlairBySubreddit()`.
+
+### **8. Platform Limitations**
+
+*   **Execution Time:** An app's code has a total execution time limit of **1 second**. Calls to external services (like the Reddit API or `fetch`) pause this timer.
+*   **Memory:** Apps are limited to **256 MB** of memory during execution.
+*   **Payload Size:** Method arguments are limited to 1 MB.
