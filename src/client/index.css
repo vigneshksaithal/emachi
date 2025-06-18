@@ -49,3 +49,20 @@
   -webkit-backface-visibility: hidden;
   -moz-backface-visibility: hidden;
 }
+
+/* Responsive layout */
+@media (min-aspect-ratio: 1/1) {
+  .game-layout {
+    flex-direction: row-reverse;
+  }
+  
+  .info-area {
+    width: 10em;
+    height: 80em;
+  }
+  
+  .countdown-wrapper {
+    flex-direction: row-reverse;
+    writing-mode: vertical-lr;
+  }
+}

@@ -29,10 +29,10 @@ export const Countdown: React.FC<CountdownProps> = ({ remaining, duration, onPau
       {/* Progress Bar */}
       <div className="flex-1 h-2 bg-gray-300 rounded-full overflow-hidden relative">
         <div
-          className="absolute top-0 h-full bg-gray-600 rounded-full transition-all duration-100 ease-linear"
+          className="absolute top-0 h-full bg-gray-600 rounded-full transition-all duration-100 ease-linear md:right-0 md:left-auto"
           style={{
             width: `${percentage * 100}%`,
-            left: '0'
+            left: window.innerWidth >= 768 ? 'auto' : '0'
           }}
         />
       </div>
