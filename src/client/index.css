@@ -92,6 +92,12 @@
 
 /* Desktop View - Progress decreases from right to left */
 @media (min-width: 768px) {
+  .countdown-section {
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+  }
+  
   .countdown-wrapper {
     justify-content: flex-start;
   }

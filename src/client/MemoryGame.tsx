@@ -158,7 +158,7 @@ export const MemoryGame = forwardRef<any, MemoryGameProps>(({
     >
       {/* Top info area */}
       <div 
-        className="info-area"
+        className="info-area countdown-section"
         style={{
           display: 'flex',
           flexDirection: 'column',
