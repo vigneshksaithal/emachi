@@ -10,12 +10,14 @@ export const Countdown: React.FC<CountdownProps> = ({ remaining, duration, onPau
   const percentage = Math.max(0, (remaining / duration));
 
   return (
-    <div className="countdown-wrapper">
+    <div className="flex items-center gap-4 w-full h-full">
+      {/* Pause Button */}
       <button
-        className="countdown-button"
+        className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12 bg-transparent border-none cursor-pointer"
         onClick={onPauseClick}
+        style={{ fontSize: 'max(8em, 2.4rem)' }}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style={{ display: 'block' }}>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="block w-full h-full">
           <title>pause</title>
           <path
             style={{ fill: '#777', stroke: 'transparent' }}
@@ -24,11 +26,13 @@ export const Countdown: React.FC<CountdownProps> = ({ remaining, duration, onPau
         </svg>
       </button>
 
-      <div className="countdown-bar">
+      {/* Progress Bar */}
+      <div className="flex-1 h-2 bg-gray-300 rounded-full overflow-hidden relative">
         <div
-          className="countdown-fill"
+          className="absolute top-0 h-full bg-gray-600 rounded-full transition-all duration-100 ease-linear md:right-0 md:left-auto"
           style={{
-            width: `${percentage * 100}%`
+            width: `${percentage * 100}%`,
+            left: window.innerWidth >= 768 ? 'auto' : '0'
           }}
         />
       </div>
