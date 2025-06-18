@@ -144,14 +144,30 @@ export const MemoryGame = forwardRef<any, MemoryGameProps>(({
 
   return (
     <div 
-      className="game-layout flex flex-col justify-center items-center gap-8 h-full"
+      className="game-layout"
       style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
         fontSize: 'min(1vmin, 0.5em)',
+        gap: '2em',
+        height: '100%',
         '--size': size
       } as React.CSSProperties}
     >
       {/* Top info area */}
-      <div className="info-area flex md:flex-row flex-col justify-center items-center w-full max-w-4xl h-16">
+      <div 
+        className="info-area countdown-section"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: '80em',
+          height: '10em'
+        }}
+      >
         {playing && (
           <Countdown
             remaining={remaining}
@@ -163,10 +179,13 @@ export const MemoryGame = forwardRef<any, MemoryGameProps>(({
 
       {/* Game grid */}
       <div 
-        className="grid gap-4 w-full max-w-4xl aspect-square"
         style={{
+          display: 'grid',
           gridTemplateColumns: `repeat(${size}, 1fr)`,
           gridTemplateRows: `repeat(${size}, 1fr)`,
+          gridGap: '1em',
+          width: '80em',
+          aspectRatio: '1',
           perspective: '100vw',
           zIndex: 2
         }}
@@ -180,7 +199,17 @@ export const MemoryGame = forwardRef<any, MemoryGameProps>(({
       </div>
 
       {/* Bottom info area */}
-      <div className="info-area flex flex-col justify-center items-center w-full max-w-4xl h-16">
+      <div 
+        className="info-area"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: '80em',
+          height: '10em'
+        }}
+      >
         <Found found={found} size={size} />
       </div>
     </div>
