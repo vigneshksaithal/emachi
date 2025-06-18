@@ -5,7 +5,7 @@ import '../server/index';
 import { defineConfig } from '@devvit/server';
 
 defineConfig({
-  name: '[Bolt] Memory Game',
+  name: 'Ematchi',
   entry: 'index.html',
   height: 'tall',
   menu: { enable: false },
