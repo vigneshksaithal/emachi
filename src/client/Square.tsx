@@ -20,11 +20,15 @@ export const Square: React.FC<SquareProps> = ({ value, selected, found, onClick 
         alignItems: 'center',
         justifyContent: 'center',
         transition: 'filter 0.2s',
-        userSelect: 'none'
+        userSelect: 'none',
+        transformStyle: 'preserve-3d',
+        transform: isFlipped ? 'rotateY(0deg)' : 'rotateY(180deg)',
+        transitionProperty: 'transform',
+        transitionDuration: '0.4s'
       }}
       onClick={!selected && !found ? onClick : undefined}
     >
-      {/* Card Back (hidden when flipped) */}
+      {/* Card Back (visible when NOT flipped) */}
       <button
         style={{
           position: 'absolute',
@@ -36,9 +40,10 @@ export const Square: React.FC<SquareProps> = ({ value, selected, found, onClick 
           alignItems: 'center',
           background: 'var(--bg-2)',
           borderRadius: '1em',
-          transform: 'rotateY(180deg)',
           cursor: selected || found ? 'default' : 'pointer',
-          WebkitTapHighlightColor: 'transparent'
+          WebkitTapHighlightColor: 'transparent',
+          backfaceVisibility: 'hidden',
+          transform: 'rotateY(180deg)'
         }}
         disabled={selected || found}
       />
@@ -56,7 +61,9 @@ export const Square: React.FC<SquareProps> = ({ value, selected, found, onClick 
           pointerEvents: 'none',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          backfaceVisibility: 'hidden',
+          transform: 'rotateY(0deg)'
         }}
       >
         {!found && (
