@@ -143,21 +143,17 @@ export const MemoryGame = forwardRef<any, MemoryGameProps>(({
   if (!level) return null;
 
   return (
-    <div 
-      className="game-layout flex flex-col justify-center items-center gap-8 h-full"
-      style={{
-        fontSize: 'min(1vmin, 0.5em)',
-        '--size': size
-      } as React.CSSProperties}
-    >
-      {/* Top info area */}
-      <div className="info-area flex md:flex-row flex-col justify-center items-center w-full max-w-4xl h-16">
+    <div className="flex flex-col justify-center items-center gap-8 h-full p-4">
+      {/* Top info area with countdown */}
+      <div className="w-full max-w-4xl h-16 flex items-center justify-center">
         {playing && (
-          <Countdown
-            remaining={remaining}
-            duration={duration}
-            onPauseClick={handlePauseClick}
-          />
+          <div className="w-full max-w-md">
+            <Countdown
+              remaining={remaining}
+              duration={duration}
+              onPauseClick={handlePauseClick}
+            />
+          </div>
         )}
       </div>
 
@@ -179,8 +175,8 @@ export const MemoryGame = forwardRef<any, MemoryGameProps>(({
         />
       </div>
 
-      {/* Bottom info area */}
-      <div className="info-area flex flex-col justify-center items-center w-full max-w-4xl h-16">
+      {/* Bottom info area with found emojis */}
+      <div className="w-full max-w-4xl h-16 flex items-center justify-center">
         <Found found={found} size={size} />
       </div>
     </div>
