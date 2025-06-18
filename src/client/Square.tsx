@@ -10,6 +10,12 @@ interface SquareProps {
 export const Square: React.FC<SquareProps> = ({ value, selected, found, onClick }) => {
   const isFlipped = selected || found;
 
+  const handleClick = () => {
+    if (!selected && !found) {
+      onClick();
+    }
+  };
+
   return (
     <div
       className={`square ${isFlipped ? 'flipped' : ''}`}
@@ -24,28 +30,25 @@ export const Square: React.FC<SquareProps> = ({ value, selected, found, onClick 
         transformStyle: 'preserve-3d',
         transform: isFlipped ? 'rotateY(0deg)' : 'rotateY(180deg)',
         transitionProperty: 'transform',
-        transitionDuration: '0.4s'
+        transitionDuration: '0.4s',
+        cursor: selected || found ? 'default' : 'pointer'
       }}
-      onClick={!selected && !found ? onClick : undefined}
+      onClick={handleClick}
     >
       {/* Card Back (visible when NOT flipped) */}
-      <button
+      <div
         style={{
           position: 'absolute',
           width: '100%',
           height: '100%',
-          border: 'none',
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
           background: 'var(--bg-2)',
           borderRadius: '1em',
-          cursor: selected || found ? 'default' : 'pointer',
-          WebkitTapHighlightColor: 'transparent',
           backfaceVisibility: 'hidden',
           transform: 'rotateY(180deg)'
         }}
-        disabled={selected || found}
       />
 
       {/* Card Front (visible when flipped) */}
@@ -58,7 +61,6 @@ export const Square: React.FC<SquareProps> = ({ value, selected, found, onClick 
           border: found ? '2px solid var(--bg-2)' : '2px solid var(--accent)',
           borderRadius: '1em',
           transition: 'border 0.2s',
-          pointerEvents: 'none',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
