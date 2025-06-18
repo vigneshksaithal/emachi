@@ -33,23 +33,10 @@
   }
 }
 
-/* Card flip animations */
+/* Force hardware acceleration for better mobile performance */
 .square {
-  transform-style: preserve-3d;
-  transition: transform 0.4s;
-}
-
-.square.flipped {
-  transform: rotateY(0deg);
-  z-index: 2;
-}
-
-.square:not(.flipped) {
-  transform: rotateY(180deg);
-}
-
-.square * {
-  backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 /* Responsive layout */

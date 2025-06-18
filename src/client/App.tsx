@@ -43,15 +43,7 @@ export const App = () => {
   };
 
   return (
-    <main style={{ 
-      textAlign: 'center', 
-      height: '100%', 
-      display: 'flex', 
-      flexDirection: 'column', 
-      justifyContent: 'center',
-      background: 'var(--bg-1)',
-      color: 'var(--fg)'
-    }}>
+    <main className="text-center h-full flex flex-col justify-center bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <MemoryGame
         ref={gameRef}
         level={currentLevel}
@@ -63,60 +55,37 @@ export const App = () => {
 
       {gameState !== 'playing' && (
         <Modal>
-          <header style={{ 
-            fontSize: 'min(5vw, 2rem)',
-            fontFamily: 'system-ui, sans-serif'
-          }}>
-            <h1 style={{ 
-              fontSize: '4em', 
-              margin: 0, 
-              height: '1em',
-              lineHeight: '1'
-            }}>
-              e<span style={{ color: 'var(--accent)' }}>match</span>i
+          <header className="text-[min(5vw,2rem)] font-system">
+            <h1 className="text-6xl m-0 h-[1em] leading-none">
+              e<span className="text-purple-600 dark:text-purple-400">match</span>i
             </h1>
-            <p style={{ margin: '0 0 1em 0' }}>the emoji matching game</p>
+            <p className="m-0 mb-4">the emoji matching game</p>
           </header>
 
-          {gameState === 'won' && <p style={{ margin: '0 0 1em 0' }}>you won! play again?</p>}
-          {gameState === 'lost' && <p style={{ margin: '0 0 1em 0' }}>you lost! play again?</p>}
-          {gameState === 'paused' && <p style={{ margin: '0 0 1em 0' }}>game paused</p>}
-          {gameState === 'waiting' && <p style={{ margin: '0 0 1em 0' }}>choose a level:</p>}
+          {gameState === 'won' && <p className="m-0 mb-4">you won! play again?</p>}
+          {gameState === 'lost' && <p className="m-0 mb-4">you lost! play again?</p>}
+          {gameState === 'paused' && <p className="m-0 mb-4">game paused</p>}
+          {gameState === 'waiting' && <p className="m-0 mb-4">choose a level:</p>}
 
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            gap: '0.5em',
-            flexWrap: 'wrap'
-          }}>
+          <div className="flex justify-center gap-2 flex-wrap">
             {gameState === 'paused' ? (
               <>
                 <button
-                  style={{
-                    background: 'var(--accent)',
-                    color: 'white',
-                    fontSize: 'inherit',
-                    fontFamily: 'inherit',
-                    border: 'none',
-                    padding: '1em',
-                    borderRadius: '0.5em',
-                    cursor: 'pointer'
-                  }}
+                  className="
+                    bg-purple-600 hover:bg-purple-700 text-white 
+                    text-inherit font-inherit border-none px-4 py-4 
+                    rounded-lg cursor-pointer transition-colors
+                  "
                   onClick={handleResume}
                 >
                   resume
                 </button>
                 <button
-                  style={{
-                    background: 'var(--accent)',
-                    color: 'white',
-                    fontSize: 'inherit',
-                    fontFamily: 'inherit',
-                    border: 'none',
-                    padding: '1em',
-                    borderRadius: '0.5em',
-                    cursor: 'pointer'
-                  }}
+                  className="
+                    bg-purple-600 hover:bg-purple-700 text-white 
+                    text-inherit font-inherit border-none px-4 py-4 
+                    rounded-lg cursor-pointer transition-colors
+                  "
                   onClick={handleQuit}
                 >
                   quit
@@ -126,16 +95,11 @@ export const App = () => {
               levels.map((level) => (
                 <button
                   key={level.label}
-                  style={{
-                    background: 'var(--accent)',
-                    color: 'white',
-                    fontSize: 'inherit',
-                    fontFamily: 'inherit',
-                    border: 'none',
-                    padding: '1em',
-                    borderRadius: '0.5em',
-                    cursor: 'pointer'
-                  }}
+                  className="
+                    bg-purple-600 hover:bg-purple-700 text-white 
+                    text-inherit font-inherit border-none px-4 py-4 
+                    rounded-lg cursor-pointer transition-colors
+                  "
                   onClick={() => handleLevelSelect(level)}
                 >
                   {level.label}
@@ -147,16 +111,7 @@ export const App = () => {
       )}
 
       {gameState === 'won' && (
-        <div style={{
-          position: 'fixed',
-          width: '100%',
-          height: '100%',
-          left: '50%',
-          top: '30%',
-          pointerEvents: 'none',
-          fontSize: '4em',
-          transform: 'translateX(-50%)'
-        }}>
+        <div className="fixed w-full h-full left-1/2 top-[30%] pointer-events-none text-6xl -translate-x-1/2">
           🎉
         </div>
       )}
