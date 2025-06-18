@@ -44,7 +44,7 @@ Devvit.addMenuItem({
     try {
       const subreddit = await reddit.getCurrentSubreddit();
       post = await reddit.submitPost({
-        title: 'Memory Card Game',
+        title: 'Ematchi',
         subredditName: subreddit.name,
         preview: <Preview />,
       });
