@@ -9,6 +9,9 @@ defineConfig({
   entry: 'index.html',
   height: 'tall',
   menu: { enable: false },
+   http: {
+    domains: ['my-site.com', 'another-domain.net'],
+  },
 });
 
 export const Preview: Devvit.BlockComponent<{ text?: string }> = ({ text = 'Loading...' }) => {
