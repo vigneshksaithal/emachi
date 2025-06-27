@@ -10,7 +10,7 @@ defineConfig({
   height: 'tall',
   menu: { enable: false },
    http: {
-    domains: ['bolt.army', 'another-domain.net'],
+    domains: ['bolt.army'],
   },
 });
 
