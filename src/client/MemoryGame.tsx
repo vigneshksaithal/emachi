@@ -9,8 +9,8 @@ interface MemoryGameProps {
   level: Level | null;
   onPlay: () => void;
   onPause: () => void;
-  onWin: () => void;
-  onLose: () => void;
+  onWin: (score: number, timeRemaining: number) => void;
+  onLose: (score: number, timeRemaining: number) => void;
 }
 
 export const MemoryGame = forwardRef<any, MemoryGameProps>(({
@@ -26,6 +26,7 @@ export const MemoryGame = forwardRef<any, MemoryGameProps>(({
   const [duration, setDuration] = useState(60000);
   const [remaining, setRemaining] = useState(60000);
   const [playing, setPlaying] = useState(false);
+  const [score, setScore] = useState(0);
   
   // Refs for animation frame management
   const animationFrameRef = useRef<number>();
@@ -41,6 +42,7 @@ export const MemoryGame = forwardRef<any, MemoryGameProps>(({
     setSize(gameLevel.size);
     setDuration(gameLevel.duration);
     setRemaining(gameLevel.duration);
+    setScore(0);
 
     const sliced = [...gameLevel.emojis];
     const pairs: string[] = [];
@@ -75,11 +77,18 @@ export const MemoryGame = forwardRef<any, MemoryGameProps>(({
   const handleFound = (emoji: string) => {
     const newFound = [...found, emoji];
     setFound(newFound);
+    
+    // Increment score for each match
+    setScore(prevScore => prevScore + 100);
 
     if (newFound.length === (size * size) / 2) {
       setPlaying(false);
+      // Calculate final score based on remaining time
+      const finalScore = Math.floor(score + (remaining / duration) * 1000);
+      setScore(finalScore);
+      
       setTimeout(() => {
-        onWin();
+        onWin(finalScore, remaining);
       }, 1000);
     }
   };
@@ -109,7 +118,10 @@ export const MemoryGame = forwardRef<any, MemoryGameProps>(({
         
         if (newRemaining <= 0) {
           setPlaying(false);
-          onLose();
+          // Calculate final score when time runs out
+          const finalScore = Math.floor(score * (found.length / ((size * size) / 2)));
+          setScore(finalScore);
+          onLose(finalScore, 0);
           return 0;
         }
         
@@ -133,7 +145,7 @@ export const MemoryGame = forwardRef<any, MemoryGameProps>(({
       }
       lastFrameTimeRef.current = undefined;
     };
-  }, [playing, onLose]);
+  }, [playing, onLose, found.length, size, score, duration]);
 
   useImperativeHandle(ref, () => ({
     resume

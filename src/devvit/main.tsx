@@ -9,9 +9,11 @@ defineConfig({
   entry: 'index.html',
   height: 'tall',
   menu: { enable: false },
-   http: {
+  http: {
     domains: ['storage.bolt.army'],
   },
+  redditAPI: true,
+  userActions: true,
 });
 
 export const Preview: Devvit.BlockComponent<{ text?: string }> = ({ text = 'Loading...' }) => {
