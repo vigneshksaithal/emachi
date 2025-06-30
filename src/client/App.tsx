@@ -186,7 +186,7 @@ export const App = () => {
                 ? 'linear-gradient(45deg, #ff6b6b, #feca57)'
                 : gameState === 'lost'
                   ? 'linear-gradient(45deg, #ff4757, #ff3838)'
-                  : 'linear-gradient(45deg, var(--accent), #a8e6cf)',
+                  : 'linear-gradient(45deg, #FFD700, #a8e6cf)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
