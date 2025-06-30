@@ -26,22 +26,18 @@ export const MemoryGame = forwardRef<any, MemoryGameProps>(({
   const [duration, setDuration] = useState(60000);
   const [remaining, setRemaining] = useState(60000);
   const [playing, setPlaying] = useState(false);
-  const animationFrameRef = useRef<number>();
   
-  // Refs to track current state values in animation loop
-  const playingRef = useRef(playing);
-  const remainingRef = useRef(remaining);
-
-  // Update refs when state changes
-  useEffect(() => {
-    playingRef.current = playing;
-  }, [playing]);
-
-  useEffect(() => {
-    remainingRef.current = remaining;
-  }, [remaining]);
+  // Refs for animation frame management
+  const animationFrameRef = useRef<number>();
+  const lastFrameTimeRef = useRef<number>();
 
   const start = (gameLevel: Level) => {
+    // Stop any existing timer
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+
+    // Reset all game state
     setSize(gameLevel.size);
     setDuration(gameLevel.duration);
     setRemaining(gameLevel.duration);
@@ -61,46 +57,18 @@ export const MemoryGame = forwardRef<any, MemoryGameProps>(({
     setGrid(shuffle([...pairs, ...pairs]));
     setFound([]);
 
-    resume();
+    // Start the game
+    setPlaying(true);
+    onPlay();
   };
 
   const resume = () => {
     setPlaying(true);
-    playingRef.current = true;
-    countdown();
     onPlay();
-  };
-
-  const countdown = () => {
-    const startTime = Date.now();
-    const initialRemainingForThisLoop = remainingRef.current;
-
-    const loop = () => {
-      if (!playingRef.current) return;
-
-      const newRemaining = initialRemainingForThisLoop - (Date.now() - startTime);
-      setRemaining(newRemaining);
-      remainingRef.current = newRemaining;
-
-      if (newRemaining <= 0) {
-        setPlaying(false);
-        playingRef.current = false;
-        onLose();
-        return;
-      }
-
-      animationFrameRef.current = requestAnimationFrame(loop);
-    };
-
-    loop();
   };
 
   const handlePauseClick = () => {
     setPlaying(false);
-    playingRef.current = false;
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
     onPause();
   };
 
@@ -110,15 +78,62 @@ export const MemoryGame = forwardRef<any, MemoryGameProps>(({
 
     if (newFound.length === (size * size) / 2) {
       setPlaying(false);
-      playingRef.current = false;
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
       setTimeout(() => {
         onWin();
       }, 1000);
     }
   };
+
+  // Timer logic using requestAnimationFrame
+  useEffect(() => {
+    if (!playing) {
+      // Cancel animation frame when not playing
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = undefined;
+      }
+      lastFrameTimeRef.current = undefined;
+      return;
+    }
+
+    const gameLoop = (currentTime: number) => {
+      if (!lastFrameTimeRef.current) {
+        lastFrameTimeRef.current = currentTime;
+      }
+
+      const deltaTime = currentTime - lastFrameTimeRef.current;
+      lastFrameTimeRef.current = currentTime;
+
+      setRemaining(prevRemaining => {
+        const newRemaining = prevRemaining - deltaTime;
+        
+        if (newRemaining <= 0) {
+          setPlaying(false);
+          onLose();
+          return 0;
+        }
+        
+        return newRemaining;
+      });
+
+      // Continue the loop only if still playing
+      if (playing) {
+        animationFrameRef.current = requestAnimationFrame(gameLoop);
+      }
+    };
+
+    // Start the animation loop
+    animationFrameRef.current = requestAnimationFrame(gameLoop);
+
+    // Cleanup function
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = undefined;
+      }
+      lastFrameTimeRef.current = undefined;
+    };
+  }, [playing, onLose]);
 
   useImperativeHandle(ref, () => ({
     resume
