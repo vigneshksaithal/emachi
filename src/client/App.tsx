@@ -8,10 +8,6 @@ import type { Level } from '../shared/types/levels';
 export const App = () => {
   const [gameState, setGameState] = useState<GameState>('waiting');
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
-  const [finalScore, setFinalScore] = useState<number>(0);
-  const [finalTimeRemaining, setFinalTimeRemaining] = useState<number>(0);
-  const [isSharing, setIsSharing] = useState<boolean>(false);
-  const [shareSuccess, setShareSuccess] = useState<boolean | null>(null);
   const gameRef = useRef<any>(null);
 
   const handleLevelSelect = (level: Level) => {
@@ -25,29 +21,6 @@ export const App = () => {
 
   const handlePause = () => {
     setGameState('paused');
-  };
-
-  const handleWin = (score: number, timeRemaining: number) => {
-    setFinalScore(score);
-    setFinalTimeRemaining(timeRemaining);
-    setGameState('won');
-  };
-
-  const handleLose = (score: number, timeRemaining: number) => {
-    setFinalScore(score);
-    setFinalTimeRemaining(timeRemaining);
-    setGameState('lost');
-  };
-
-  const handleResume = () => {
-    if (gameRef.current && gameRef.current.resume) {
-      gameRef.current.resume();
-    }
-  };
-
-  const handleQuit = () => {
-    setGameState('waiting');
-    setCurrentLevel(null);
   };
 
   const generateFunnyComment = (isWin: boolean, score: number, timeRemaining: number) => {
@@ -77,11 +50,9 @@ export const App = () => {
     return comments[Math.floor(Math.random() * comments.length)];
   };
 
-  const handleShareScore = async () => {
+  const autoShareScore = async (isWin: boolean, score: number, timeRemaining: number) => {
     try {
-      setIsSharing(true);
-      const isWin = gameState === 'won';
-      const commentText = generateFunnyComment(isWin, finalScore, finalTimeRemaining);
+      const commentText = generateFunnyComment(isWin, score, timeRemaining);
       
       const response = await fetch('/api/submit-game-score', {
         method: 'POST',
@@ -94,17 +65,36 @@ export const App = () => {
       });
       
       if (response.ok) {
-        setShareSuccess(true);
+        console.log('Score automatically shared successfully!');
       } else {
-        setShareSuccess(false);
-        console.error('Failed to share score:', await response.text());
+        console.error('Failed to auto-share score:', await response.text());
       }
     } catch (error) {
-      console.error('Error sharing score:', error);
-      setShareSuccess(false);
-    } finally {
-      setIsSharing(false);
+      console.error('Error auto-sharing score:', error);
     }
+  };
+
+  const handleWin = async (score: number, timeRemaining: number) => {
+    setGameState('won');
+    // Automatically share the score without user interaction
+    await autoShareScore(true, score, timeRemaining);
+  };
+
+  const handleLose = async (score: number, timeRemaining: number) => {
+    setGameState('lost');
+    // Automatically share the score without user interaction
+    await autoShareScore(false, score, timeRemaining);
+  };
+
+  const handleResume = () => {
+    if (gameRef.current && gameRef.current.resume) {
+      gameRef.current.resume();
+    }
+  };
+
+  const handleQuit = () => {
+    setGameState('waiting');
+    setCurrentLevel(null);
   };
 
   return (
@@ -144,67 +134,15 @@ export const App = () => {
           </header>
 
           {gameState === 'won' && (
-            <>
-              <p style={{ margin: '0 0 1em 0' }}>
-                🎉 You won! Score: {finalScore} 🎉
-              </p>
-              {shareSuccess === null ? (
-                <button
-                  style={{
-                    background: 'var(--accent)',
-                    color: 'white',
-                    fontSize: 'inherit',
-                    fontFamily: 'inherit',
-                    border: 'none',
-                    padding: '1em',
-                    borderRadius: '0.5em',
-                    cursor: 'pointer',
-                    marginBottom: '1em',
-                    opacity: isSharing ? 0.7 : 1
-                  }}
-                  onClick={handleShareScore}
-                  disabled={isSharing}
-                >
-                  {isSharing ? 'Sharing...' : 'Share My Epic Win!'}
-                </button>
-              ) : (
-                <p style={{ margin: '0 0 1em 0', color: shareSuccess ? 'green' : 'red' }}>
-                  {shareSuccess ? 'Successfully shared your score!' : 'Failed to share score. Try again!'}
-                </p>
-              )}
-            </>
+            <p style={{ margin: '0 0 1em 0' }}>
+              🎉 You won! Your epic victory has been shared! 🎉
+            </p>
           )}
           
           {gameState === 'lost' && (
-            <>
-              <p style={{ margin: '0 0 1em 0' }}>
-                💀 You lost! Score: {finalScore} 💀
-              </p>
-              {shareSuccess === null ? (
-                <button
-                  style={{
-                    background: 'var(--accent)',
-                    color: 'white',
-                    fontSize: 'inherit',
-                    fontFamily: 'inherit',
-                    border: 'none',
-                    padding: '1em',
-                    borderRadius: '0.5em',
-                    cursor: 'pointer',
-                    marginBottom: '1em',
-                    opacity: isSharing ? 0.7 : 1
-                  }}
-                  onClick={handleShareScore}
-                  disabled={isSharing}
-                >
-                  {isSharing ? 'Sharing...' : 'Share My Epic Fail!'}
-                </button>
-              ) : (
-                <p style={{ margin: '0 0 1em 0', color: shareSuccess ? 'green' : 'red' }}>
-                  {shareSuccess ? 'Successfully shared your score!' : 'Failed to share score. Try again!'}
-                </p>
-              )}
-            </>
+            <p style={{ margin: '0 0 1em 0' }}>
+              💀 You lost! Your epic fail has been shared for all to see! 💀
+            </p>
           )}
           
           {gameState === 'paused' && <p style={{ margin: '0 0 1em 0' }}>game paused</p>}
