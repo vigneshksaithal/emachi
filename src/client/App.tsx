@@ -5,6 +5,15 @@ import { levels } from '../shared/levels';
 import type { GameState } from '../shared/types/game';
 import type { Level } from '../shared/types/levels';
 
+// Extend window interface to include devvit
+declare global {
+  interface Window {
+    devvit?: {
+      postMessage: (message: any) => void;
+    };
+  }
+}
+
 export const App = () => {
   const [gameState, setGameState] = useState<GameState>('waiting');
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
@@ -54,20 +63,33 @@ export const App = () => {
     try {
       const commentText = generateFunnyComment(isWin, score, timeRemaining);
       
-      const response = await fetch('/api/submit-game-score', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          commentText,
-        }),
-      });
-      
-      if (response.ok) {
-        console.log('Score automatically shared successfully!');
+      // Use Devvit's postMessage to communicate with the Devvit app
+      if (window.devvit?.postMessage) {
+        window.devvit.postMessage({
+          type: 'SUBMIT_COMMENT',
+          payload: {
+            commentText,
+          },
+        });
+        console.log('Score automatically shared successfully via postMessage!');
       } else {
-        console.error('Failed to auto-share score:', await response.text());
+        console.warn('Devvit postMessage not available - falling back to fetch');
+        // Fallback to the original fetch method for development/testing
+        const response = await fetch('/api/submit-game-score', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            commentText,
+          }),
+        });
+        
+        if (response.ok) {
+          console.log('Score automatically shared successfully via fetch!');
+        } else {
+          console.error('Failed to auto-share score:', await response.text());
+        }
       }
     } catch (error) {
       console.error('Error auto-sharing score:', error);

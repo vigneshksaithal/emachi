@@ -14,6 +14,28 @@ defineConfig({
   },
   redditAPI: true,
   userActions: true,
+  onMessage: async (event, context) => {
+    if (event.type === 'SUBMIT_COMMENT') {
+      try {
+        const { commentText } = event.data.payload;
+        
+        if (!commentText) {
+          console.error('No comment text provided');
+          return;
+        }
+
+        // Submit the comment using the current post context
+        await context.reddit.submitComment({
+          id: context.postId!,
+          text: commentText,
+        });
+
+        console.log('Comment submitted successfully');
+      } catch (error) {
+        console.error('Error submitting comment:', error);
+      }
+    }
+  },
 });
 
 export const Preview: Devvit.BlockComponent<{ text?: string }> = ({ text = 'Loading...' }) => {
