@@ -13,26 +13,50 @@ defineConfig({
     domains: ['storage.bolt.army'],
   },
   redditAPI: true,
-  userActions: true,
   onMessage: async (event, context) => {
+    console.log('Received message:', event);
+    
     if (event.type === 'SUBMIT_COMMENT') {
       try {
         const { commentText } = event.data.payload;
+        
+        console.log('Attempting to submit comment:', commentText);
+        console.log('Post ID:', context.postId);
         
         if (!commentText) {
           console.error('No comment text provided');
           return;
         }
 
+        if (!context.postId) {
+          console.error('No post ID available in context');
+          return;
+        }
+
         // Submit the comment using the current post context
-        await context.reddit.submitComment({
-          id: context.postId!,
+        const comment = await context.reddit.submitComment({
+          id: context.postId,
           text: commentText,
         });
 
-        console.log('Comment submitted successfully');
+        console.log('Comment submitted successfully:', comment.id);
+        
+        // Send confirmation back to the webview
+        context.ui.webView.postMessage('devvit-message', {
+          type: 'COMMENT_SUBMITTED',
+          success: true,
+          commentId: comment.id
+        });
+        
       } catch (error) {
         console.error('Error submitting comment:', error);
+        
+        // Send error back to the webview
+        context.ui.webView.postMessage('devvit-message', {
+          type: 'COMMENT_SUBMITTED',
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
       }
     }
   },

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { MemoryGame } from './MemoryGame';
 import { Modal } from './Modal';
 import { levels } from '../shared/levels';
@@ -9,7 +9,7 @@ import type { Level } from '../shared/types/levels';
 declare global {
   interface Window {
     devvit?: {
-      postMessage: (message: any) => void;
+      postMessage: (type: string, data: any) => void;
     };
   }
 }
@@ -18,6 +18,26 @@ export const App = () => {
   const [gameState, setGameState] = useState<GameState>('waiting');
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
   const gameRef = useRef<any>(null);
+
+  // Listen for messages from Devvit
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'devvit-message') {
+        const { type, success, error, commentId } = event.data.data;
+        
+        if (type === 'COMMENT_SUBMITTED') {
+          if (success) {
+            console.log('Comment posted successfully! Comment ID:', commentId);
+          } else {
+            console.error('Failed to post comment:', error);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   const handleLevelSelect = (level: Level) => {
     setCurrentLevel(level);
@@ -63,33 +83,24 @@ export const App = () => {
     try {
       const commentText = generateFunnyComment(isWin, score, timeRemaining);
       
+      console.log('Attempting to auto-share score:', { isWin, score, timeRemaining, commentText });
+      
       // Use Devvit's postMessage to communicate with the Devvit app
       if (window.devvit?.postMessage) {
-        window.devvit.postMessage({
+        console.log('Using Devvit postMessage');
+        window.devvit.postMessage('devvit-message', {
           type: 'SUBMIT_COMMENT',
           payload: {
             commentText,
           },
         });
-        console.log('Score automatically shared successfully via postMessage!');
+        console.log('Message sent to Devvit successfully!');
       } else {
-        console.warn('Devvit postMessage not available - falling back to fetch');
-        // Fallback to the original fetch method for development/testing
-        const response = await fetch('/api/submit-game-score', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            commentText,
-          }),
-        });
+        console.warn('Devvit postMessage not available - this might be in development mode');
+        console.log('Available on window:', Object.keys(window));
         
-        if (response.ok) {
-          console.log('Score automatically shared successfully via fetch!');
-        } else {
-          console.error('Failed to auto-share score:', await response.text());
-        }
+        // In development, we can't post comments, so just log
+        console.log('Would post comment:', commentText);
       }
     } catch (error) {
       console.error('Error auto-sharing score:', error);
