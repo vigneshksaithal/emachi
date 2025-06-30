@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MemoryGame } from './MemoryGame';
 import { Modal } from './Modal';
+import { Confetti } from './Confetti';
 import { levels } from '../shared/levels';
 import type { GameState } from '../shared/types/game';
 import type { Level } from '../shared/types/levels';
@@ -17,6 +18,8 @@ declare global {
 export const App = () => {
   const [gameState, setGameState] = useState<GameState>('waiting');
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
   const gameRef = useRef<any>(null);
 
   // Listen for messages from Devvit
@@ -109,12 +112,22 @@ export const App = () => {
 
   const handleWin = async (score: number, timeRemaining: number) => {
     setGameState('won');
+    setShowConfetti(true);
+    
+    // Stop confetti after 5 seconds
+    setTimeout(() => setShowConfetti(false), 5000);
+    
     // Automatically share the score without user interaction
     await autoShareScore(true, score, timeRemaining);
   };
 
   const handleLose = async (score: number, timeRemaining: number) => {
     setGameState('lost');
+    setIsShaking(true);
+    
+    // Stop shaking after 1 second
+    setTimeout(() => setIsShaking(false), 1000);
+    
     // Automatically share the score without user interaction
     await autoShareScore(false, score, timeRemaining);
   };
@@ -128,6 +141,8 @@ export const App = () => {
   const handleQuit = () => {
     setGameState('waiting');
     setCurrentLevel(null);
+    setShowConfetti(false);
+    setIsShaking(false);
   };
 
   return (
@@ -137,8 +152,15 @@ export const App = () => {
       display: 'flex', 
       flexDirection: 'column', 
       justifyContent: 'center',
-      background: 'var(--bg-1)',
-      color: 'var(--fg)'
+      background: gameState === 'won' 
+        ? 'linear-gradient(45deg, #ff6b6b, #feca57, #48cae4, #a8e6cf)' 
+        : gameState === 'lost'
+          ? 'linear-gradient(45deg, #ff4757, #ff3838)'
+          : 'var(--bg-1)',
+      color: 'var(--fg)',
+      transition: 'background 0.5s ease',
+      transform: isShaking ? 'translateX(-5px)' : 'translateX(0)',
+      animation: isShaking ? 'shake 0.5s ease-in-out infinite' : 'none',
     }}>
       <MemoryGame
         ref={gameRef}
@@ -159,7 +181,16 @@ export const App = () => {
               fontSize: '4em', 
               margin: 0, 
               height: '1em',
-              lineHeight: '1'
+              lineHeight: '1',
+              background: gameState === 'won' 
+                ? 'linear-gradient(45deg, #ff6b6b, #feca57)'
+                : gameState === 'lost'
+                  ? 'linear-gradient(45deg, #ff4757, #ff3838)'
+                  : 'linear-gradient(45deg, var(--accent), #a8e6cf)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              animation: gameState === 'won' ? 'bounce 1s ease-in-out infinite' : 'none',
             }}>
               e<span style={{ color: 'var(--accent)' }}>match</span>i
             </h1>
@@ -167,13 +198,21 @@ export const App = () => {
           </header>
 
           {gameState === 'won' && (
-            <p style={{ margin: '0 0 1em 0' }}>
+            <p style={{ 
+              margin: '0 0 1em 0',
+              fontSize: '1.5em',
+              animation: 'bounce 2s ease-in-out infinite',
+            }}>
               🎉 You won! Your epic victory has been shared! 🎉
             </p>
           )}
           
           {gameState === 'lost' && (
-            <p style={{ margin: '0 0 1em 0' }}>
+            <p style={{ 
+              margin: '0 0 1em 0',
+              fontSize: '1.5em',
+              color: '#ff4757',
+            }}>
               💀 You lost! Your epic fail has been shared for all to see! 💀
             </p>
           )}
@@ -191,49 +230,66 @@ export const App = () => {
               <>
                 <button
                   style={{
-                    background: 'var(--accent)',
+                    background: 'linear-gradient(45deg, var(--accent), #a8e6cf)',
                     color: 'white',
                     fontSize: 'inherit',
                     fontFamily: 'inherit',
                     border: 'none',
                     padding: '1em',
                     borderRadius: '0.5em',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s ease',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
                   }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                   onClick={handleResume}
                 >
                   resume
                 </button>
                 <button
                   style={{
-                    background: 'var(--accent)',
+                    background: 'linear-gradient(45deg, #ff4757, #ff3838)',
                     color: 'white',
                     fontSize: 'inherit',
                     fontFamily: 'inherit',
                     border: 'none',
                     padding: '1em',
                     borderRadius: '0.5em',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s ease',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
                   }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                   onClick={handleQuit}
                 >
                   quit
                 </button>
               </>
             ) : (
-              levels.map((level) => (
+              levels.map((level, index) => (
                 <button
                   key={level.label}
                   style={{
-                    background: 'var(--accent)',
+                    background: index === 0 
+                      ? 'linear-gradient(45deg, #a8e6cf, #88d8c0)' 
+                      : index === 1 
+                        ? 'linear-gradient(45deg, #feca57, #ff9ff3)'
+                        : 'linear-gradient(45deg, #ff6b6b, #ee5a52)',
                     color: 'white',
                     fontSize: 'inherit',
                     fontFamily: 'inherit',
                     border: 'none',
                     padding: '1em',
                     borderRadius: '0.5em',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s ease',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                    textShadow: '1px 1px 2px rgba(0,0,0,0.3)',
                   }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05) rotate(2deg)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1) rotate(0deg)'}
                   onClick={() => handleLevelSelect(level)}
                 >
                   {level.label}
@@ -244,6 +300,9 @@ export const App = () => {
         </Modal>
       )}
 
+      {/* Confetti effect */}
+      <Confetti active={showConfetti} duration={5000} />
+
       {gameState === 'won' && (
         <div style={{
           position: 'fixed',
@@ -253,11 +312,26 @@ export const App = () => {
           top: '30%',
           pointerEvents: 'none',
           fontSize: '4em',
-          transform: 'translateX(-50%)'
+          transform: 'translateX(-50%)',
+          animation: 'bounce 1s ease-in-out infinite',
         }}>
           🎉
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes bounce {
+          0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+          40% { transform: translateY(-30px); }
+          60% { transform: translateY(-15px); }
+        }
+        
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-5px); }
+          75% { transform: translateX(5px); }
+        }
+      `}</style>
     </main>
   );
 };
